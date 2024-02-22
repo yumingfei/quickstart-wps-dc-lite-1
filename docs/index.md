@@ -1,24 +1,15 @@
-# Demo服务实例部署文档
+# WPS文档中心V7-lite服务实例部署文档
 
 ## 概述
 
-`(服务概述内容)`。
+金山软件文档中心lite服务（自动创建RDS数据库与OSS对象存储）,本产品用于在线管理云文档，支持多人在线文档预览编辑。
 
-```
-eg：
+支持在计算巢平台上一键基于WPS免维护版本服务创建可直接投产的整套环境（包括rds和oss）。
 
-Demo服务是计算巢提供的示例。
-本文向您介绍如何开通计算巢上的`Demo`服务，以及部署流程和使用说明。
-```
 
 ## 计费说明
 
-`(计费说明内容)`
-
-```
-eg:
-
-Demo在计算巢上的费用主要涉及：
+WPS服务在计算巢上的费用主要涉及：
 
 - 所选vCPU与内存规格
 - 系统盘类型及容量
@@ -29,103 +20,281 @@ Demo在计算巢上的费用主要涉及：
 - 按量付费（小时）
 - 包年包月
 
-目前提供如下实例：
+目前支持8核32G及以上规格的实例（请根据实际并发用户数需要提高规格），例如：
 
 | 规格族 | vCPU与内存 | 系统盘 | 公网带宽 |
 | --- | --- | --- | --- |
-| ecs.r6.xlarge | 内存型r6，4vCPU 32GiB | ESSD云盘 200GiB PL0 | 固定带宽1Mbps |
+| ecs.g6.2xlarge | 通用型 g6，8vCPU 32GiB | ESSD云盘 200GiB及以上系统盘 250GiB及以上数据盘 | 建议带宽10Mbps及以上 |
+| ecs.g6.4xlarge | 通用型 g6，16vCPU 64GiB | ESSD云盘 200GiB及以上系统盘 500GiB及以上数据盘 | 建议带宽10Mbps及以上 |
 
 预估费用在创建实例时可实时看到。
-如需更多规格、其他服务（如集群高可用性要求、企业级支持服务等），请联系我们 [mailto:xx@xx.com](mailto:xx@xx.com)。
 
-```
+
 
 ## 部署架构
 
-`(部署概述内容)`
+本方案目前仅需一台ECS主机提供服务，如需更多规格、其他服务（如集群高可用性要求、企业级支持服务等），请联系我们 [mailto:https://www.wps.cn](mailto:https://www.wps.cn)。
 
-## RAM账号所需权限
+## RAM账号所需权限(推荐直接使用管理员账号创建，无需设置权限)
 
-`(权限策略内容)`
 
+WPS服务需要对ECS、VPC、RDS、OSS等资源进行访问和创建操作，若您使用RAM用户创建服务实例，需要在创建服务实例前，对使用的RAM用户的账号添加相应资源的权限。添加RAM权限的详细操作，请参见[为RAM用户授权](https://help.aliyun.com/document_detail/121945.html)。所需权限如下表所示。
+
+### 1.RAM账户操作计算巢的权限
 ```
-eg: 
+AliyunComputeNestUserFullAccess
+AliyunComputeNestSupplierFullAccess
+AliyunRAMReadOnlyAccess
+AliyunVPCReadOnlyAccess
+AliyunECSReadOnlyAccess
+AliyunROSFullAccess
+AliyunQuotasReadOnlyAccess
+```
 
-Demo服务需要对ECS、VPC等资源进行访问和创建操作，若您使用RAM用户创建服务实例，需要在创建服务实例前，对使用的RAM用户的账号添加相应资源的权限。添加RAM权限的详细操作，请参见[为RAM用户授权](https://help.aliyun.com/document_detail/121945.html)。所需权限如下表所示。
-
-
-| 权限策略名称 | 备注 |
-| --- | --- |
-| AliyunECSFullAccess | 管理云服务器服务（ECS）的权限 |
-
+### 2.RAM账户操作资源的权限（建议添加自定义策略）
+```
+{
+    "Statement": [
+        {
+            "Action": [
+                "ecs:AddTags",
+                "ecs:AllocatePublicIpAddress",
+                "ecs:AttachKeyPair",
+                "ecs:AuthorizeSecurityGroup",
+                "ecs:AuthorizeSecurityGroupEgress",
+                "ecs:ConfigureSecurityGroupPermissions",
+                "ecs:CreateSecurityGroup",
+                "ecs:DeleteInstance",
+                "ecs:DeleteSecurityGroup",
+                "ecs:DescribeAvailableResource",
+                "ecs:DescribeCloudAssistantStatus",
+                "ecs:DescribeDedicatedHosts",
+                "ecs:DescribeDisks",
+                "ecs:DescribeImageSupportInstanceTypes",
+                "ecs:DescribeImages",
+                "ecs:DescribeInstanceAutoRenewAttribute",
+                "ecs:DescribeInstanceRamRole",
+                "ecs:DescribeInstances",
+                "ecs:DescribeInvocationResults",
+                "ecs:DescribeInvocations",
+                "ecs:DescribeKeyPairs",
+                "ecs:DescribeManagedInstances",
+                "ecs:DescribeNetworkInterfaces",
+                "ecs:DescribePrice",
+                "ecs:DescribeSecurityGroupAttribute",
+                "ecs:DescribeSecurityGroups",
+                "ecs:DescribeSnapshots",
+                "ecs:DescribeUserData",
+                "ecs:DetachKeyPair",
+                "ecs:JoinResourceGroup",
+                "ecs:ModifyDiskSpec",
+                "ecs:ModifyInstanceAttribute",
+                "ecs:ModifySecurityGroupEgressRule",
+                "ecs:ModifySecurityGroupRule",
+                "ecs:RemoveTags",
+                "ecs:ReplaceSystemDisk",
+                "ecs:ResizeDisk",
+                "ecs:RunCommand",
+                "ecs:RunInstances",
+                "ecs:StartInstance",
+                "ecs:StopInstance",
+                "ecs:StopInvocation",
+                "ecs:TagResources",
+                "ecs:UntagResources",
+                "ecs:ModifyDiskAttribute",
+                "ecs:CreateSnapshot",
+                "ecs:CreateImage",
+                "ecs:DeleteSnapshot",
+                "ecs:DeleteImage"
+                "ecs:AttachInstanceRAMRole",
+                "vpc:AssociateVpcCidrBlock",
+                "vpc:CreateVSwitch",
+                "vpc:CreateVpc",
+                "vpc:DeleteVSwitch",
+                "vpc:DeleteVpc",
+                "vpc:DescribeVSwitches",
+                "vpc:DescribeVpcs",
+                "vpc:DescribeVpnGateways",
+                "vpc:DescribeZones",
+                "vpc:ModifyVSwitchAttribute",
+                "vpc:ModifyVpcAttribute",
+                "vpc:TagResources",
+                "vpc:UnTagResources",
+                "rds:DescribeDBInstances",
+                "slb:DescribeLoadBalancers",
+                "rds:AllocateInstancePublicConnection",
+                "rds:CreateAccount",
+                "rds:CreateDBInstance",
+                "rds:CreateDatabase",
+                "rds:DeleteAccount",
+                "rds:DeleteDBInstance",
+                "rds:DescribeAccounts",
+                "rds:DescribeAvailableInstanceClass",
+                "rds:DescribeAvailableResource",
+                "rds:DescribeBackupPolicy",
+                "rds:DescribeClassList",
+                "rds:DescribeDBInstanceAttribute",
+                "rds:DescribeDBInstanceIPArrayList",
+                "rds:DescribeDBInstanceNetInfo",
+                "rds:DescribeDBInstanceSSL",
+                "rds:DescribeDBInstances",
+                "rds:DescribeDatabases",
+                "rds:DescribeInstanceKeywords",
+                "rds:DescribeRegions",
+                "rds:DescribeSQLCollectorPolicy",
+                "rds:DescribeSecurityGroupConfiguration",
+                "rds:DescribeTags",
+                "rds:GrantAccountPrivilege",
+                "rds:ListTagResources",
+                "rds:ModifyBackupPolicy",
+                "rds:ModifyDBInstanceConnectionString",
+                "rds:ModifyDBInstanceMaintainTime",
+                "rds:ModifyDBInstanceSSL",
+                "rds:ModifyDBInstanceSpec",
+                "rds:ModifySQLCollectorPolicy",
+                "rds:ModifySecurityGroupConfiguration",
+                "rds:ModifySecurityIps",
+                "rds:QueryPrice",
+                "rds:ResetAccountPassword",
+                "rds:TagResources",
+                "rds:UntagResources",
+                "ram:AttachPolicyToRole",
+                "ram:CreatePolicy",
+                "ram:CreateRole",
+                "ram:DeletePolicy",
+                "ram:DeleteRole",
+                "ram:DetachPolicyFromRole",
+                "ram:GetPolicy",
+                "ram:GetRole",
+                "ram:ListPoliciesForRole",
+                "ram:UpdateRole",
+                "oss:DeleteBucket",
+                "oss:DeleteBucketEncryption",
+                "oss:DeleteBucketTagging",
+                "oss:DeleteObject",
+                "oss:GetBucketAcl",
+                "oss:GetBucketCors",
+                "oss:GetBucketInfo",
+                "oss:GetBucketLifecycle",
+                "oss:GetBucketLogging",
+                "oss:GetBucketPolicy",
+                "oss:GetBucketReferer",
+                "oss:GetBucketTagging",
+                "oss:GetBucketVersioning",
+                "oss:GetBucketWebsite",
+                "oss:ListObjects",
+                "oss:PutBucket",
+                "oss:PutBucketAcl",
+                "oss:PutBucketCors",
+                "oss:PutBucketEncryption",
+                "oss:PutBucketLifecycle",
+                "oss:PutBucketLogging",
+                "oss:PutBucketPolicy",
+                "oss:PutBucketReferer",
+                "oss:PutBucketTagging",
+                "oss:PutBucketVersioning",
+                "oss:PutBucketWebsite",
+                "oss:ListBuckets",
+                "ram:CreateAccessKey",
+                "ram:PassRole",
+                "ram:AssumeRole"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Action": "quotas:ListProductQuotas",
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Action": "ram:GetRole",
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Action": [
+                "vpc:DescribeVSwitches",
+                "vpc:DescribeVpcs"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Action": [
+                "ros:CreateStack",
+                "ros:GetStack"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        },
+        {
+            "Action": "oss:*",
+            "Effect": "Allow",
+            "Resource": "acs:oss:*:*:wps-dc-lite-*"
+        }
+    ],
+    "Version": "1"
+}
 ```
 
 ## 部署流程
 
 ### 部署步骤
 
-`(部署步骤内容)`
+#### 1. 搜索查找wps免维护版计算巢服务
+在我的服务清单中直接使用，上线后需要在服务市场中查找
 
-```
-eg:
+#### 2. 配置并执行创建服务
+点击【正式创建】后配置如下内容：
 
-1. 单击部署链接，进入服务实例部署界面，根据界面提示，填写参数完成部署。
-2. 补充示意图。
-```
-### 部署参数说明
+- 配置区域和付费模式
+    - 目前主要支持阿里云国内地域。
 
-`(部署参数说明内容)`
+- 配置ECS主机（请选择8c32g及以上配置）
+    - 请至少选择8c32g及以上配置
+    - 请保存好设置的root密码
+    - 数据磁盘请尽量给大一点，后续扩容不方便
 
-```
-eg:
+- 配置可用区以及VPC（默认自动创建）
 
-您在创建服务实例的过程中，需要配置服务实例信息。下文介绍云XR实时渲染平台服务实例输入参数的详细信息。
+- 配置RDS数据库
 
-| 参数组 | 参数项 | 示例 | 说明 |
-| --- | --- | --- | --- |
-| 服务实例名称 |  | test | 实例的名称 |
-| 地域 |  | 华北2（北京） | 选中服务实例的地域，建议就近选中，以获取更好的网络延时。 |
-```
+- 配置OSS信息
+    - 自动创建bucket
+    - 名称将为“服务实例名称-填写的后缀”，例如wps-dc-lite-upbk-bucket1）
+
 
 ### 验证结果
+- 创建成功后查看服务状态
+    - 确认部署成功后机器会自动重启继续完成初始化（重新注册RDS数据库和OSS）
+    - 控制台显示服务已准备好的终端界面后初始化才成功
 
-`(验证结果内容)`
+- 获取访问信息
+    - 使用public ip通过ssh工具登录节点，root账户密码为上面设置的ECS主机信息中的密码；
 
-```
-eg:
+- 确认结果并清理敏感信息
+    - 确认服务均正常后，请删除/data/.aliyun_info.bak文件，里面记录了rds和oss信息用户初始化过程。
 
-1. 查看服务实例。服务实例创建成功后，部署时间大约需要2分钟。部署完成后，页面上可以看到对应的服务实例。 
-2. 通过服务实例访问TuGraph。进入到对应的服务实例后，可以在页面上获取到web、rpc、ssh共3种使用方式。
-```
+### 使用WPS文档中心
 
-### 使用Demo
-
-`(服务使用说明内容)`
-
-```
-eg:
-
-请访问Demo官网了解如何使用：[使用文档](https://www.aliyun.com)
-```
+请访问WPS官网了解如何使用：[使用文档](https://www.wps.cn)
 
 ## 问题排查
 
-`(服务使用说明内容)`
-
+### 1. 账户和密码以什么形式提供？
+目前要获取默认账户密码，只能ssh登陆节点，执行命令打印/tmp/platforminfo文件内容获取。
 ```
-eg:
-
-请访问[Demo的问题排查链接](https://www.aliyun.com)获取帮助。
+cat /tmp/platforminfo
 ```
+其中登录ip为阿里云提供的public ip地址，root账户密码为创建服务时配置ecs主机处输入的密码；
+
+请及时登陆并修改默认密码：
+- 请使用"v7文档中心管理后台"栏目的admin账户和默认密码登陆云文档服务
+- 请使用"运维平台/部署平台"栏目中的wpsadmin账户和默认密码登陆运维平台
 
 ## 联系我们
 
-欢迎访问Demo官网（[https://www.aliyun.com](https://www.aliyun.com)）了解更多信息。
+欢迎访问WPS官网（[https://www.wps.cn](https://www.wps.cn)）了解更多信息。
 
-联系邮箱：[https://www.aliyun.com](mailto:https://www.aliyun.com)
-
-社区版开源地址：[https://github.com/](https://github.com/)
-
-扫码关注微信公众号，技术博客、活动通知不容错过：
-
-`(添加二维码图片)`
+联系邮箱：[https://www.wps.cn](mailto:https://www.wps.cn)
