@@ -105,7 +105,7 @@ AliyunQuotasReadOnlyAccess
                 "ecs:CreateSnapshot",
                 "ecs:CreateImage",
                 "ecs:DeleteSnapshot",
-                "ecs:DeleteImage"
+                "ecs:DeleteImage",
                 "ecs:AttachInstanceRAMRole",
                 "vpc:AssociateVpcCidrBlock",
                 "vpc:CreateVSwitch",
